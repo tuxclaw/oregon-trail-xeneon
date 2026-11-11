@@ -3,6 +3,7 @@
 #include <QLabel>
 #include <QTextEdit>
 #include <QPushButton>
+#include <QStackedWidget>
 #include "GameState.h"
 #include "TrailWidget.h"
 
@@ -18,13 +19,19 @@ private slots:
     void onTrade();
     void onNewGame();
     void onHighScores();
+    void onQuit();
     void updateUI();
+    void showMenu();
 
 private:
     void setupUI();
+    void setupMenu();
     void endGame();
 
     GameState m_game;
+    QStackedWidget *m_stack = nullptr;
+    QWidget *m_menuPage = nullptr;
+    QWidget *m_gamePage = nullptr;
     TrailWidget *m_trail = nullptr;
     QLabel *m_status = nullptr;
     QTextEdit *m_log = nullptr;
