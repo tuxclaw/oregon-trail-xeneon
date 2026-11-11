@@ -1,11 +1,12 @@
 #include "TrailWidget.h"
 #include <QPainter>
 #include <QPaintEvent>
+#include <QLinearGradient>
 
 TrailWidget::TrailWidget(QWidget *parent)
     : QWidget(parent)
 {
-    setMinimumHeight(200);
+    setMinimumHeight(220);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 }
 
@@ -20,41 +21,60 @@ void TrailWidget::paintEvent(QPaintEvent *)
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
 
-    // Background — prairie sky and ground
+    // Sky gradient
     QLinearGradient sky(0, 0, 0, height());
-    sky.setColorAt(0, QColor(135, 206, 235));
-    sky.setColorAt(0.6, QColor(255, 228, 181));
-    sky.setColorAt(1, QColor(34, 139, 34));
+    sky.setColorAt(0.0, QColor(70, 130, 180));
+    sky.setColorAt(0.45, QColor(135, 206, 235));
+    sky.setColorAt(0.7, QColor(255, 220, 150));
+    sky.setColorAt(1.0, QColor(46, 125, 50));
     p.fillRect(rect(), sky);
+
+    // Simple ground
+    p.setBrush(QColor(85, 107, 47));
+    p.drawRect(0, height() * 0.65, width(), height() * 0.35);
 
     if (!m_state) return;
 
-    // Trail progress bar
     int progress = qMin(100, m_state->miles() * 100 / 2040);
-    int barW = width() - 40;
-    int barH = 30;
-    int barX = 20;
-    int barY = height() / 2 - 15;
+    int barW = width() - 60;
+    int barH = 36;
+    int barX = 30;
+    int barY = height() * 0.55;
 
-    p.setPen(Qt::black);
-    p.setBrush(QColor(101, 67, 33));
-    p.drawRoundedRect(barX, barY, barW, barH, 8, 8);
+    // Trail bar
+    p.setPen(QPen(Qt::black, 2));
+    p.setBrush(QColor(120, 80, 40));
+    p.drawRoundedRect(barX, barY, barW, barH, 10, 10);
 
     p.setBrush(QColor(210, 180, 140));
-    p.drawRoundedRect(barX, barY, barW * progress / 100, barH, 8, 8);
+    p.drawRoundedRect(barX, barY, barW * progress / 100.0, barH, 10, 10);
 
     p.setPen(Qt::white);
-    p.setFont(QFont("Arial", 14, QFont::Bold));
-    p.drawText(barX, barY - 10, QString("Independence → Oregon City   (%1 miles)").arg(m_state->miles()));
+    p.setFont(QFont("Arial", 15, QFont::Bold));
+    p.drawText(barX, barY - 14, QString("Independence  →  Oregon City    %1 / 2040 miles").arg(m_state->miles()));
 
-    // Simple wagon icon at progress position
-    int wagonX = barX + (barW * progress / 100) - 30;
-    p.setBrush(QColor(139, 69, 19));
-    p.drawRect(wagonX, barY - 40, 60, 30);
+    // Landmarks
+    auto drawLandmark = [&](int mile, const QString &name) {
+        int x = barX + (barW * mile / 2040);
+        p.setPen(Qt::yellow);
+        p.drawLine(x, barY + barH, x, barY + barH + 20);
+        p.drawText(x - 40, barY + barH + 38, name);
+    };
+    drawLandmark(500, "River");
+    drawLandmark(950, "Chimney Rock");
+    drawLandmark(1450, "Fort Laramie");
+
+    // Better wagon
+    int wagonX = barX + (barW * progress / 100.0) - 40;
+    int wagonY = barY - 50;
+    p.setBrush(QColor(160, 82, 45));
+    p.drawRoundedRect(wagonX, wagonY, 80, 36, 6, 6);
+    p.setBrush(QColor(100, 50, 20));
+    p.drawRect(wagonX + 10, wagonY - 12, 50, 14); // cover
     p.setBrush(Qt::black);
-    p.drawEllipse(wagonX + 5, barY - 15, 12, 12);
-    p.drawEllipse(wagonX + 43, barY - 15, 12, 12);
-
+    p.drawEllipse(wagonX + 8, wagonY + 28, 16, 16);
+    p.drawEllipse(wagonX + 56, wagonY + 28, 16, 16);
     p.setPen(Qt::white);
-    p.drawText(wagonX, barY - 50, "Wagon");
+    p.setFont(QFont("Arial", 11, QFont::Bold));
+    p.drawText(wagonX + 10, wagonY - 18, "Wagon");
 }
