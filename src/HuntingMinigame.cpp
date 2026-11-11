@@ -19,148 +19,142 @@ public:
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
 
-        // Sky + ground
+        // Sky
         QLinearGradient sky(0, 0, 0, height());
-        sky.setColorAt(0.0, QColor(120, 170, 210));
-        sky.setColorAt(0.5, QColor(170, 195, 150));
-        sky.setColorAt(1.0, QColor(85, 120, 55));
+        sky.setColorAt(0.0, QColor(100, 160, 210));
+        sky.setColorAt(0.45, QColor(160, 190, 140));
+        sky.setColorAt(1.0, QColor(75, 110, 50));
         p.fillRect(rect(), sky);
 
-        p.setBrush(QColor(65, 95, 40));
+        // Ground
+        p.setBrush(QColor(55, 85, 35));
         p.setPen(Qt::NoPen);
-        p.drawRect(0, height() * 0.64, width(), height());
+        p.drawRect(0, height() * 0.66, width(), height());
 
         // Hills
-        p.setBrush(QColor(55, 85, 35, 170));
+        p.setBrush(QColor(45, 75, 30, 160));
         QPainterPath hills;
-        hills.moveTo(0, height() * 0.60);
-        hills.quadTo(width() * 0.3, height() * 0.46, width() * 0.55, height() * 0.56);
-        hills.quadTo(width() * 0.8, height() * 0.64, width(), height() * 0.48);
+        hills.moveTo(0, height() * 0.62);
+        hills.quadTo(width() * 0.25, height() * 0.48, width() * 0.5, height() * 0.58);
+        hills.quadTo(width() * 0.78, height() * 0.66, width(), height() * 0.50);
         hills.lineTo(width(), height());
         hills.lineTo(0, height());
         p.drawPath(hills);
 
         // Trees
-        drawTree(p, 80, height() * 0.58, 1.0);
-        drawTree(p, 220, height() * 0.60, 0.8);
-        drawTree(p, width() - 140, height() * 0.57, 1.1);
-        drawTree(p, width() - 280, height() * 0.61, 0.75);
-        drawTree(p, 380, height() * 0.62, 0.6);
+        drawTree(p, 70, height() * 0.60, 1.15);
+        drawTree(p, 200, height() * 0.62, 0.85);
+        drawTree(p, width() - 120, height() * 0.59, 1.2);
+        drawTree(p, width() - 260, height() * 0.63, 0.7);
+        drawTree(p, 360, height() * 0.64, 0.55);
 
         // Bushes
-        p.setBrush(QColor(35, 65, 25));
-        for (int i = 0; i < 6; ++i) {
-            int bx = 60 + i * (width() / 6);
-            p.drawEllipse(bx, height() * 0.60, 55, 28);
+        p.setBrush(QColor(30, 60, 22));
+        for (int i = 0; i < 7; ++i) {
+            int bx = 40 + i * (width() / 7);
+            p.drawEllipse(bx, height() * 0.62, 48, 24);
         }
 
-        // Hit/miss flash
         if (flash > 0) {
-            QColor c = lastHit ? QColor(255, 230, 120, 70) : QColor(180, 40, 40, 50);
+            QColor c = lastHit ? QColor(255, 240, 140, 60) : QColor(160, 30, 30, 40);
             p.fillRect(rect(), c);
         }
 
-        // Animal
         if (animalVisible) {
-            int x = width() * animalX / 100 - 35;
-            int y = height() * 0.54;
+            int x = width() * animalX / 100 - 40;
+            int y = height() * 0.56;
             drawAnimal(p, x, y, animalType, animFrame);
         }
 
-        // Muzzle flash (from bottom center, as if the player is holding the gun)
+        // Muzzle flash
         if (muzzle > 0) {
             int cx = width() / 2;
-            int cy = height() - 30;
+            int cy = height() - 20;
             p.setPen(Qt::NoPen);
-            QRadialGradient flashGrad(cx, cy - 20, 40);
-            flashGrad.setColorAt(0, QColor(255, 255, 180, 220));
-            flashGrad.setColorAt(0.4, QColor(255, 180, 60, 160));
-            flashGrad.setColorAt(1, QColor(255, 100, 0, 0));
-            p.setBrush(flashGrad);
-            p.drawEllipse(cx - 30, cy - 50, 60, 40);
-            // Sparks
-            p.setPen(QPen(QColor(255, 220, 100), 2));
-            for (int i = 0; i < 6; ++i) {
-                int dx = (i - 3) * 8;
-                p.drawLine(cx + dx, cy - 20, cx + dx * 2, cy - 40 - i * 3);
-            }
+            QRadialGradient g(cx, cy - 25, 50);
+            g.setColorAt(0, QColor(255, 255, 200, 230));
+            g.setColorAt(0.35, QColor(255, 190, 70, 180));
+            g.setColorAt(1, QColor(255, 80, 0, 0));
+            p.setBrush(g);
+            p.drawEllipse(cx - 35, cy - 55, 70, 45);
         }
 
         // Crosshair
         int cx = width() / 2;
-        int cy = height() / 2 + 8;
-        p.setPen(QPen(QColor(255, 70, 70), 2));
+        int cy = height() / 2 + 6;
+        p.setPen(QPen(QColor(255, 80, 80), 2.5));
         p.setBrush(Qt::NoBrush);
-        p.drawEllipse(cx - 32, cy - 32, 64, 64);
-        p.drawLine(cx - 48, cy, cx - 14, cy);
-        p.drawLine(cx + 14, cy, cx + 48, cy);
-        p.drawLine(cx, cy - 48, cx, cy - 14);
-        p.drawLine(cx, cy + 14, cx, cy + 48);
-        p.setBrush(QColor(255, 70, 70));
+        p.drawEllipse(cx - 30, cy - 30, 60, 60);
+        p.drawLine(cx - 46, cy, cx - 12, cy);
+        p.drawLine(cx + 12, cy, cx + 46, cy);
+        p.drawLine(cx, cy - 46, cx, cy - 12);
+        p.drawLine(cx, cy + 12, cx, cy + 46);
+        p.setBrush(QColor(255, 80, 80));
         p.drawEllipse(cx - 3, cy - 3, 6, 6);
 
-        // Instructions
         p.setPen(Qt::white);
         p.setFont(QFont("Arial", 13, QFont::Bold));
-        p.drawText(10, 24, "SHOOT when the animal is under the crosshair!");
+        p.drawText(12, 26, "SHOOT when the animal is under the crosshair");
     }
 
 private:
     void drawTree(QPainter &p, int x, int baseY, qreal scale) {
         p.setPen(Qt::NoPen);
-        // Trunk
-        p.setBrush(QColor(90, 55, 30));
-        p.drawRect(x - 6 * scale, baseY, 12 * scale, 40 * scale);
-        // Foliage
-        p.setBrush(QColor(40, 80, 30));
-        p.drawEllipse(x - 28 * scale, baseY - 45 * scale, 56 * scale, 40 * scale);
-        p.setBrush(QColor(50, 95, 35));
-        p.drawEllipse(x - 22 * scale, baseY - 60 * scale, 44 * scale, 32 * scale);
+        p.setBrush(QColor(85, 50, 25));
+        p.drawRoundedRect(x - 5 * scale, baseY, 10 * scale, 38 * scale, 2, 2);
+        p.setBrush(QColor(35, 75, 28));
+        p.drawEllipse(x - 26 * scale, baseY - 42 * scale, 52 * scale, 36 * scale);
+        p.setBrush(QColor(45, 90, 32));
+        p.drawEllipse(x - 20 * scale, baseY - 58 * scale, 40 * scale, 28 * scale);
+        p.setBrush(QColor(55, 100, 38));
+        p.drawEllipse(x - 14 * scale, baseY - 70 * scale, 28 * scale, 20 * scale);
     }
 
     void drawAnimal(QPainter &p, int x, int y, int type, int frame) {
-        int legOffset = (frame % 4 < 2) ? 4 : -4;
+        int leg = (frame % 6 < 3) ? 5 : -5;
 
         if (type == 0) { // Deer
-            p.setBrush(QColor(150, 95, 45));
             p.setPen(Qt::NoPen);
-            p.drawEllipse(x, y, 55, 30);
-            p.drawEllipse(x + 40, y - 20, 24, 24);
-            p.setBrush(QColor(100, 55, 25));
-            p.drawEllipse(x + 48, y - 26, 7, 12);
+            p.setBrush(QColor(165, 105, 50));
+            p.drawEllipse(x + 5, y + 4, 58, 32);
+            p.drawEllipse(x + 48, y - 16, 26, 26);
+            p.setBrush(QColor(120, 70, 30));
+            p.drawEllipse(x + 58, y - 24, 8, 14);
             // Antlers
-            p.setPen(QPen(QColor(90, 50, 20), 2));
-            p.drawLine(x + 50, y - 18, x + 46, y - 32);
-            p.drawLine(x + 50, y - 18, x + 58, y - 30);
-            // Legs (animated)
-            p.setPen(QPen(QColor(110, 65, 30), 3));
-            p.drawLine(x + 12, y + 28, x + 10 + legOffset, y + 46);
-            p.drawLine(x + 24, y + 28, x + 22 - legOffset, y + 46);
-            p.drawLine(x + 36, y + 28, x + 38 + legOffset, y + 46);
-            p.drawLine(x + 46, y + 28, x + 48 - legOffset, y + 46);
+            p.setPen(QPen(QColor(100, 55, 20), 2.5));
+            p.drawLine(x + 58, y - 14, x + 50, y - 32);
+            p.drawLine(x + 58, y - 14, x + 68, y - 30);
+            p.drawLine(x + 50, y - 32, x + 46, y - 40);
+            p.drawLine(x + 68, y - 30, x + 74, y - 38);
+            // Legs
+            p.setPen(QPen(QColor(120, 70, 30), 3.5));
+            p.drawLine(x + 16, y + 34, x + 14 + leg, y + 52);
+            p.drawLine(x + 28, y + 34, x + 26 - leg, y + 52);
+            p.drawLine(x + 40, y + 34, x + 42 + leg, y + 52);
+            p.drawLine(x + 50, y + 34, x + 52 - leg, y + 52);
         } else if (type == 1) { // Buffalo
-            p.setBrush(QColor(75, 48, 28));
             p.setPen(Qt::NoPen);
-            p.drawEllipse(x - 8, y + 2, 85, 42);
-            p.drawEllipse(x + 52, y - 10, 32, 30);
-            p.setBrush(QColor(55, 35, 18));
-            p.drawEllipse(x + 68, y - 6, 10, 10);
-            p.setPen(QPen(QColor(55, 35, 18), 4));
-            p.drawLine(x + 8, y + 42, x + 4 + legOffset, y + 60);
-            p.drawLine(x + 22, y + 42, x + 20 - legOffset, y + 60);
-            p.drawLine(x + 48, y + 42, x + 52 + legOffset, y + 60);
-            p.drawLine(x + 64, y + 42, x + 68 - legOffset, y + 60);
+            p.setBrush(QColor(70, 42, 25));
+            p.drawEllipse(x - 5, y + 6, 90, 44);
+            p.drawEllipse(x + 58, y - 8, 34, 32);
+            p.setBrush(QColor(50, 30, 15));
+            p.drawEllipse(x + 74, y - 4, 12, 12);
+            p.setPen(QPen(QColor(50, 30, 15), 4.5));
+            p.drawLine(x + 10, y + 48, x + 6 + leg, y + 66);
+            p.drawLine(x + 26, y + 48, x + 24 - leg, y + 66);
+            p.drawLine(x + 52, y + 48, x + 56 + leg, y + 66);
+            p.drawLine(x + 68, y + 48, x + 72 - leg, y + 66);
         } else { // Rabbit
-            p.setBrush(QColor(190, 165, 130));
             p.setPen(Qt::NoPen);
-            p.drawEllipse(x + 12, y + 6, 32, 22);
-            p.drawEllipse(x + 30, y - 6, 18, 18);
-            p.setBrush(QColor(210, 190, 160));
-            p.drawEllipse(x + 32, y - 16, 5, 14);
-            p.drawEllipse(x + 38, y - 16, 5, 14);
-            p.setPen(QPen(QColor(160, 130, 95), 2));
-            p.drawLine(x + 18, y + 26, x + 16 + legOffset, y + 38);
-            p.drawLine(x + 28, y + 26, x + 30 - legOffset, y + 38);
+            p.setBrush(QColor(200, 175, 140));
+            p.drawEllipse(x + 14, y + 10, 34, 24);
+            p.drawEllipse(x + 34, y - 2, 20, 20);
+            p.setBrush(QColor(220, 200, 170));
+            p.drawEllipse(x + 36, y - 16, 6, 16);
+            p.drawEllipse(x + 44, y - 16, 6, 16);
+            p.setPen(QPen(QColor(170, 140, 100), 2.5));
+            p.drawLine(x + 20, y + 32, x + 18 + leg, y + 44);
+            p.drawLine(x + 32, y + 32, x + 34 - leg, y + 44);
         }
     }
 };
@@ -196,7 +190,7 @@ HuntingMinigame::HuntingMinigame(QWidget *parent)
     connect(&m_timer, &QTimer::timeout, this, &HuntingMinigame::onTick);
     connect(m_shoot, &QPushButton::clicked, this, &HuntingMinigame::onShoot);
 
-    m_timer.start(120); // smoother animation
+    m_timer.start(120);
 }
 
 void HuntingMinigame::onTick()
@@ -205,7 +199,6 @@ void HuntingMinigame::onTick()
     if (m_muzzle > 0) m_muzzle--;
     m_animFrame++;
 
-    // Time counts down more slowly relative to animation ticks
     static int slow = 0;
     if (++slow >= 8) {
         slow = 0;
@@ -217,14 +210,12 @@ void HuntingMinigame::onTick()
         }
     }
 
-    // Move animal
     if (m_animalVisible) {
         m_animalX += m_animalDir * (1 + (m_animalType == 2 ? 2 : 0));
         if (m_animalX < 10 || m_animalX > 90) {
             m_animalDir *= -1;
             m_animalX = qBound(10, m_animalX, 90);
         }
-        // Occasional disappear
         if (QRandomGenerator::global()->bounded(100) < 3)
             m_animalVisible = false;
     } else if (QRandomGenerator::global()->bounded(100) < 12) {
@@ -250,7 +241,7 @@ void HuntingMinigame::onTick()
 
 void HuntingMinigame::onShoot()
 {
-    m_bulletsUsed += 2;
+    m_bulletsUsed += 1;
     m_muzzle = 5;
     m_flash = 5;
 
