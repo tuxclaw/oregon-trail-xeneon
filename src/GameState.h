@@ -6,7 +6,7 @@
 
 struct Person {
     QString name;
-    int health = 100; // 0-100
+    int health = 100;
     bool alive = true;
 };
 
@@ -14,16 +14,18 @@ class GameState {
 public:
     GameState();
 
-    void newGame(const QString &leaderName, int occupation);
+    void newGame(const QStringList &names, int occupation);
     void advanceDay();
-    void hunt();
+    void hunt(int foodGained, int bulletsUsed);
     void rest();
     void trade();
+    bool attemptRiverCrossing(int choice); // 0=ford, 1=caulk, 2=ferry
     bool isGameOver() const;
+    bool reachedOregon() const { return m_miles >= TOTAL_MILES; }
     QString statusText() const;
     QString eventLog() const;
+    int calculateScore() const;
 
-    // Getters
     int miles() const { return m_miles; }
     int day() const { return m_day; }
     int money() const { return m_money; }
@@ -32,11 +34,13 @@ public:
     int clothing() const { return m_clothing; }
     int oxen() const { return m_oxen; }
     const QVector<Person> &party() const { return m_party; }
+    int survivors() const;
 
 private:
     void randomEvent();
     void consumeFood();
     void checkHealth();
+    void checkLandmark();
 
     int m_miles = 0;
     int m_day = 1;
@@ -45,10 +49,10 @@ private:
     int m_bullets = 0;
     int m_clothing = 0;
     int m_oxen = 0;
-    int m_misc = 0;
     QVector<Person> m_party;
     QStringList m_log;
     std::mt19937 m_rng;
+    bool m_nearRiver = false;
 
     static constexpr int TOTAL_MILES = 2040;
 };
