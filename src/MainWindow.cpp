@@ -45,15 +45,17 @@ void MainWindow::setupUI()
 
     auto makeMenuBtn = [](const QString &text) {
         auto *b = new QPushButton(text);
-        b->setMinimumSize(400, 80);
+        b->setMinimumSize(420, 78);
         b->setFont(QFont("Arial", 20, QFont::Bold));
         b->setStyleSheet(
             "QPushButton { background: #4a6741; color: white; border-radius: 16px; }"
             "QPushButton:hover { background: #5a8751; }"
+            "QPushButton:disabled { background: #2a3a2a; color: #666; }"
         );
         return b;
     };
 
+    m_btnResume = makeMenuBtn("Resume Journey");
     auto *btnNew = makeMenuBtn("New Journey");
     auto *btnScores = makeMenuBtn("High Scores");
     auto *btnQuit = makeMenuBtn("Quit");
@@ -61,7 +63,8 @@ void MainWindow::setupUI()
     menuLayout->addStretch();
     menuLayout->addWidget(title);
     menuLayout->addWidget(sub);
-    menuLayout->addSpacing(40);
+    menuLayout->addSpacing(36);
+    menuLayout->addWidget(m_btnResume);
     menuLayout->addWidget(btnNew);
     menuLayout->addWidget(btnScores);
     menuLayout->addWidget(btnQuit);
@@ -69,11 +72,12 @@ void MainWindow::setupUI()
 
     m_menuPage->setStyleSheet("background: qlineargradient(x1:0,y1:0,x2:0,y2:1, stop:0 #1a2a1a, stop:1 #0d1a0d);");
 
+    connect(m_btnResume, &QPushButton::clicked, this, &MainWindow::resumeGame);
     connect(btnNew, &QPushButton::clicked, this, &MainWindow::onNewGame);
     connect(btnScores, &QPushButton::clicked, this, &MainWindow::onHighScores);
     connect(btnQuit, &QPushButton::clicked, this, &MainWindow::onQuit);
 
-    // Game page (existing layout)
+    // Game page
     m_gamePage = new QWidget;
     auto *mainLayout = new QHBoxLayout(m_gamePage);
     mainLayout->setContentsMargins(10, 10, 10, 10);
@@ -142,9 +146,24 @@ void MainWindow::setupUI()
     m_stack->addWidget(m_gamePage);
 }
 
+void MainWindow::updateMenuButtons()
+{
+    m_btnResume->setEnabled(m_gameInProgress && !m_game.isGameOver());
+    m_btnResume->setVisible(m_gameInProgress && !m_game.isGameOver());
+}
+
 void MainWindow::showMenu()
 {
+    updateMenuButtons();
     m_stack->setCurrentWidget(m_menuPage);
+}
+
+void MainWindow::resumeGame()
+{
+    if (m_gameInProgress && !m_game.isGameOver()) {
+        m_stack->setCurrentWidget(m_gamePage);
+        updateUI();
+    }
 }
 
 void MainWindow::onNewGame()
@@ -154,6 +173,7 @@ void MainWindow::onNewGame()
 
     m_leaderName = dlg.leaderName();
     m_game.newGame(dlg.partyNames(), dlg.occupation());
+    m_gameInProgress = true;
     SoundManager::instance().play("travel");
     m_stack->setCurrentWidget(m_gamePage);
     updateUI();
@@ -183,7 +203,7 @@ void MainWindow::onTravel()
 
 void MainWindow::onHunt()
 {
-    if (m_game.bullets() < 4) {
+    if (m_game.bullets() < 1) {
         QMessageBox::information(this, "Hunt", "Not enough bullets.");
         return;
     }
@@ -250,6 +270,7 @@ void MainWindow::endGame()
     HighScoreManager::instance().addScore(m_leaderName.isEmpty() ? "Anonymous" : m_leaderName,
                                           score, m_game.day(), m_game.miles(), m_game.survivors());
 
+    m_gameInProgress = false;
     QMessageBox::information(this, "Journey Ended", msg);
     showMenu();
 }
