@@ -3,11 +3,13 @@
 A classic Oregon Trail game written in **C++ and Qt**, specifically designed to fit perfectly on the **Corsair Xeneon Edge** (14.5" 2560×720 ultrawide touchscreen).
 
 ## Features
-- Optimized 32:9 layout for 2560×720 with touch-friendly controls
+- Proper start menu (New Journey / High Scores / Quit)
 - Occupation selection + custom party names
 - Hunting minigame (timing-based shoot)
-- River crossing choices (ford / caulk / ferry)
-- Improved trail graphics with landmarks (Chimney Rock, Fort Laramie, etc.)
+- Multiple river crossings (Kansas, Big Blue, Platte, North Platte, Snake) with ford / caulk / ferry choices
+- Dynamic weather system (Clear, Rain, Heavy Rain, Storm, Snow, Blizzard) that affects travel speed, food use, and health
+- Weather visuals on the trail (rain, snow, darkened skies)
+- Improved trail graphics with landmarks
 - High score tracking (saved via QSettings)
 - Optional sound effects
 - Classic Oregon Trail mechanics (inspired by the publicly published 1978 source)
