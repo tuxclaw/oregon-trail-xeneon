@@ -4,10 +4,18 @@
 #include <QVector>
 #include <random>
 
+enum class Weather { Clear, Rain, HeavyRain, Storm, Snow, Blizzard };
+
 struct Person {
     QString name;
     int health = 100;
     bool alive = true;
+};
+
+struct River {
+    int mile;
+    QString name;
+    bool crossed = false;
 };
 
 class GameState {
@@ -25,6 +33,10 @@ public:
     QString statusText() const;
     QString eventLog() const;
     int calculateScore() const;
+    Weather weather() const { return m_weather; }
+    QString weatherName() const;
+    bool pendingRiver() const { return m_pendingRiverIndex >= 0; }
+    QString pendingRiverName() const;
 
     int miles() const { return m_miles; }
     int day() const { return m_day; }
@@ -40,7 +52,9 @@ private:
     void randomEvent();
     void consumeFood();
     void checkHealth();
-    void checkLandmark();
+    void updateWeather();
+    void checkRivers();
+    void applyWeatherEffects();
 
     int m_miles = 0;
     int m_day = 1;
@@ -52,7 +66,9 @@ private:
     QVector<Person> m_party;
     QStringList m_log;
     std::mt19937 m_rng;
-    bool m_nearRiver = false;
+    Weather m_weather = Weather::Clear;
+    QVector<River> m_rivers;
+    int m_pendingRiverIndex = -1;
 
     static constexpr int TOTAL_MILES = 2040;
 };
