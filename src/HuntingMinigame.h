@@ -26,9 +26,12 @@ private:
     int m_timeLeft = 25;
     int m_food = 0;
     int m_bulletsUsed = 0;
-    int m_animalX = 50;       // 0-100
-    int m_animalType = 0;     // 0=deer, 1=buffalo, 2=rabbit
+    int m_animalX = 50;
+    int m_animalDir = 1;
+    int m_animalType = 0;
     bool m_animalVisible = false;
-    int m_flash = 0;          // hit/miss flash frames
+    int m_flash = 0;
     bool m_lastHit = false;
+    int m_muzzle = 0;
+    int m_animFrame = 0;
 };
