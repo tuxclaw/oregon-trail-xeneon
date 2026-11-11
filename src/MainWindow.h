@@ -17,10 +17,12 @@ private slots:
     void onRest();
     void onTrade();
     void onNewGame();
+    void onHighScores();
     void updateUI();
 
 private:
     void setupUI();
+    void endGame();
 
     GameState m_game;
     TrailWidget *m_trail = nullptr;
@@ -31,4 +33,6 @@ private:
     QPushButton *m_btnRest = nullptr;
     QPushButton *m_btnTrade = nullptr;
     QPushButton *m_btnNew = nullptr;
+    QPushButton *m_btnScores = nullptr;
+    QString m_leaderName;
 };
