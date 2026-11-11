@@ -22,11 +22,12 @@ private slots:
     void onQuit();
     void updateUI();
     void showMenu();
+    void resumeGame();
 
 private:
     void setupUI();
-    void setupMenu();
     void endGame();
+    void updateMenuButtons();
 
     GameState m_game;
     QStackedWidget *m_stack = nullptr;
@@ -41,5 +42,7 @@ private:
     QPushButton *m_btnTrade = nullptr;
     QPushButton *m_btnNew = nullptr;
     QPushButton *m_btnScores = nullptr;
+    QPushButton *m_btnResume = nullptr;
     QString m_leaderName;
+    bool m_gameInProgress = false;
 };
