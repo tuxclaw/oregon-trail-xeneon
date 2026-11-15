@@ -1,0 +1,13 @@
+<RCC>
+  <qresource prefix="/sprites">
+    <file alias="wagon.png">resources/sprites/wagon.png</file>
+    <file alias="oxen.png">resources/sprites/oxen.png</file>
+    <file alias="deer.png">resources/sprites/deer.png</file>
+    <file alias="buffalo.png">resources/sprites/buffalo.png</file>
+    <file alias="rabbit.png">resources/sprites/rabbit.png</file>
+    <file alias="tree.png">resources/sprites/tree.png</file>
+    <file alias="hills.png">resources/sprites/hills.png</file>
+    <file alias="ground.png">resources/sprites/ground.png</file>
+    <file alias="ground_snow.png">resources/sprites/ground_snow.png</file>
+  </qresource>
+</RCC>

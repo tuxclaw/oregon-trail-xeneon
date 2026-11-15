@@ -4,9 +4,21 @@
 #include <QRandomGenerator>
 #include <QFont>
 #include <QPainterPath>
+#include <QPixmap>
 
 class HuntCanvas : public QWidget {
 public:
+    explicit HuntCanvas(QWidget *parent = nullptr)
+        : QWidget(parent),
+          m_deer(":/sprites/deer.png"),
+          m_buffalo(":/sprites/buffalo.png"),
+          m_rabbit(":/sprites/rabbit.png"),
+          m_tree(":/sprites/tree.png"),
+          m_hills(":/sprites/hills.png"),
+          m_ground(":/sprites/ground.png")
+    {}
+
+    int animalDir = 1;
     int animalX = 50;
     int animalType = 0;
     bool animalVisible = false;
@@ -18,6 +30,7 @@ public:
     void paintEvent(QPaintEvent *) override {
         QPainter p(this);
         p.setRenderHint(QPainter::Antialiasing);
+        p.setRenderHint(QPainter::SmoothPixmapTransform);
 
         // Sky
         QLinearGradient sky(0, 0, 0, height());
@@ -29,17 +42,29 @@ public:
         // Ground
         p.setBrush(QColor(55, 85, 35));
         p.setPen(Qt::NoPen);
-        p.drawRect(0, height() * 0.66, width(), height());
+        if (!m_ground.isNull()) {
+            const int groundY = height() * 0.66;
+            p.drawTiledPixmap(0, groundY, width(), height() - groundY, m_ground);
+        } else {
+            p.drawRect(0, height() * 0.66, width(), height());
+        }
 
         // Hills
-        p.setBrush(QColor(45, 75, 30, 160));
-        QPainterPath hills;
-        hills.moveTo(0, height() * 0.62);
-        hills.quadTo(width() * 0.25, height() * 0.48, width() * 0.5, height() * 0.58);
-        hills.quadTo(width() * 0.78, height() * 0.66, width(), height() * 0.50);
-        hills.lineTo(width(), height());
-        hills.lineTo(0, height());
-        p.drawPath(hills);
+        if (!m_hills.isNull()) {
+            const int hillsY = height() * 0.40;
+            const int hillsHeight = qMax(1, int(height() * 0.30));
+            const QPixmap hillsTile = m_hills.scaledToHeight(hillsHeight, Qt::SmoothTransformation);
+            p.drawTiledPixmap(0, hillsY, width(), hillsHeight, hillsTile);
+        } else {
+            p.setBrush(QColor(45, 75, 30, 160));
+            QPainterPath hills;
+            hills.moveTo(0, height() * 0.62);
+            hills.quadTo(width() * 0.25, height() * 0.48, width() * 0.5, height() * 0.58);
+            hills.quadTo(width() * 0.78, height() * 0.66, width(), height() * 0.50);
+            hills.lineTo(width(), height());
+            hills.lineTo(0, height());
+            p.drawPath(hills);
+        }
 
         // Trees
         drawTree(p, 70, height() * 0.60, 1.15);
@@ -49,10 +74,12 @@ public:
         drawTree(p, 360, height() * 0.64, 0.55);
 
         // Bushes
-        p.setBrush(QColor(30, 60, 22));
-        for (int i = 0; i < 7; ++i) {
-            int bx = 40 + i * (width() / 7);
-            p.drawEllipse(bx, height() * 0.62, 48, 24);
+        if (m_tree.isNull()) {
+            p.setBrush(QColor(30, 60, 22));
+            for (int i = 0; i < 7; ++i) {
+                int bx = 40 + i * (width() / 7);
+                p.drawEllipse(bx, height() * 0.62, 48, 24);
+            }
         }
 
         if (flash > 0) {
@@ -61,9 +88,23 @@ public:
         }
 
         if (animalVisible) {
-            int x = width() * animalX / 100 - 40;
-            int y = height() * 0.56;
-            drawAnimal(p, x, y, animalType, animFrame);
+            const QPixmap &animal = animalType == 0 ? m_deer : (animalType == 1 ? m_buffalo : m_rabbit);
+            if (!animal.isNull()) {
+                const qreal targetWidth = animalType == 0 ? 96 : (animalType == 1 ? 140 : 52);
+                const qreal targetHeight = targetWidth * animal.height() / animal.width();
+                const qreal centerX = width() * animalX / 100.0;
+                p.save();
+                p.translate(centerX, height() / 2.0 + 6);
+                if (animalDir < 0)
+                    p.scale(-1, 1);
+                p.drawPixmap(QRectF(-targetWidth / 2, -targetHeight / 2, targetWidth, targetHeight),
+                             animal, QRectF(animal.rect()));
+                p.restore();
+            } else {
+                int x = width() * animalX / 100 - 40;
+                int y = height() * 0.56;
+                drawAnimal(p, x, y, animalType, animFrame);
+            }
         }
 
         // Muzzle flash
@@ -98,7 +139,21 @@ public:
     }
 
 private:
+    QPixmap m_deer;
+    QPixmap m_buffalo;
+    QPixmap m_rabbit;
+    QPixmap m_tree;
+    QPixmap m_hills;
+    QPixmap m_ground;
+
     void drawTree(QPainter &p, int x, int baseY, qreal scale) {
+        if (!m_tree.isNull()) {
+            const qreal targetHeight = 108 * scale;
+            const qreal targetWidth = targetHeight * m_tree.width() / m_tree.height();
+            p.drawPixmap(QRectF(x - targetWidth / 2, baseY + 38 * scale - targetHeight,
+                               targetWidth, targetHeight), m_tree, QRectF(m_tree.rect()));
+            return;
+        }
         p.setPen(Qt::NoPen);
         p.setBrush(QColor(85, 50, 25));
         p.drawRoundedRect(x - 5 * scale, baseY, 10 * scale, 38 * scale, 2, 2);
@@ -227,6 +282,7 @@ void HuntingMinigame::onTick()
     }
 
     m_canvas->animalX = m_animalX;
+    m_canvas->animalDir = m_animalDir;
     m_canvas->animalType = m_animalType;
     m_canvas->animalVisible = m_animalVisible;
     m_canvas->flash = m_flash;

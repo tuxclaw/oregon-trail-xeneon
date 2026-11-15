@@ -7,6 +7,12 @@
 
 TrailWidget::TrailWidget(QWidget *parent)
     : QWidget(parent)
+    , m_wagon(QPixmap(":/sprites/wagon.png"))
+    , m_oxen(QPixmap(":/sprites/oxen.png"))
+    , m_tree(QPixmap(":/sprites/tree.png"))
+    , m_hills(QPixmap(":/sprites/hills.png"))
+    , m_ground(QPixmap(":/sprites/ground.png"))
+    , m_groundSnow(QPixmap(":/sprites/ground_snow.png"))
 {
     setMinimumHeight(240);
     setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -22,6 +28,7 @@ void TrailWidget::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
     p.setRenderHint(QPainter::Antialiasing);
+    p.setRenderHint(QPainter::SmoothPixmapTransform);
 
     Weather w = m_state ? m_state->weather() : Weather::Clear;
 
@@ -46,21 +53,47 @@ void TrailWidget::paintEvent(QPaintEvent *)
     }
     p.fillRect(rect(), sky);
 
-    // Ground
-    QColor ground = (w == Weather::Snow || w == Weather::Blizzard) ? QColor(235, 240, 245) : QColor(75, 100, 40);
-    p.setBrush(ground);
-    p.setPen(Qt::NoPen);
-    p.drawRect(0, height() * 0.68, width(), height());
-
     // Distant hills
-    p.setBrush(QColor(50, 80, 35, 140));
-    QPainterPath hills;
-    hills.moveTo(0, height() * 0.62);
-    hills.quadTo(width() * 0.2, height() * 0.50, width() * 0.45, height() * 0.58);
-    hills.quadTo(width() * 0.7, height() * 0.66, width(), height() * 0.52);
-    hills.lineTo(width(), height());
-    hills.lineTo(0, height());
-    p.drawPath(hills);
+    p.setPen(Qt::NoPen);
+    if (!m_hills.isNull()) {
+        const QRectF band(0, height() * 0.42, width(), height() * 0.30);
+        const QPixmap hills = m_hills.scaledToHeight(qMax(1, qRound(band.height())), Qt::SmoothTransformation);
+        p.save();
+        p.setClipRect(band);
+        p.drawTiledPixmap(band, hills);
+        p.restore();
+    } else {
+        p.setBrush(QColor(50, 80, 35, 140));
+        QPainterPath hills;
+        hills.moveTo(0, height() * 0.62);
+        hills.quadTo(width() * 0.2, height() * 0.50, width() * 0.45, height() * 0.58);
+        hills.quadTo(width() * 0.7, height() * 0.66, width(), height() * 0.52);
+        hills.lineTo(width(), height());
+        hills.lineTo(0, height());
+        p.drawPath(hills);
+    }
+
+    // Ground: tile the full texture, without cropping the source.
+    const bool snowy = w == Weather::Snow || w == Weather::Blizzard;
+    const QPixmap &ground = snowy ? m_groundSnow : m_ground;
+    if (!ground.isNull()) {
+        p.drawTiledPixmap(QRectF(0, height() * 0.68, width(), height() * 0.32), ground);
+    } else {
+        p.setBrush(snowy ? QColor(235, 240, 245) : QColor(75, 100, 40));
+        p.drawRect(0, height() * 0.68, width(), height());
+    }
+
+    // Trees sit behind the weather particles.
+    if (!m_tree.isNull()) {
+        const qreal fractions[] = {0.06, 0.16, 0.74, 0.88};
+        const qreal heights[] = {108, 76, 124, 68};
+        for (int i = 0; i < 4; ++i) {
+            const qreal treeWidth = heights[i] * m_tree.width() / m_tree.height();
+            const QRectF target(width() * fractions[i] - treeWidth / 2,
+                                height() * 0.74 - heights[i], treeWidth, heights[i]);
+            p.drawPixmap(target, m_tree, m_tree.rect());
+        }
+    }
 
     // Weather particles
     if (w == Weather::Rain || w == Weather::HeavyRain || w == Weather::Storm) {
@@ -99,36 +132,63 @@ void TrailWidget::paintEvent(QPaintEvent *)
     p.setBrush(QColor(200, 170, 120));
     p.drawRoundedRect(barX, barY, barW * progress / 100.0, barH, 8, 8);
 
+    qreal labelBaseline = barY - 12;
+
+    // The oxen lead the wagon toward Oregon City, with both facing right.
+    if (!m_wagon.isNull()) {
+        const qreal wagonWidth = 136;
+        const qreal wagonHeight = wagonWidth * m_wagon.height() / m_wagon.width();
+        const qreal rigWidth = wagonWidth + (m_oxen.isNull() ? 0 : 6 + 108);
+        qreal wagonLeft = barX + barW * progress / 100.0 - wagonWidth / 2;
+        if (wagonLeft + rigWidth > barX + barW + 8)
+            wagonLeft = barX + barW + 8 - rigWidth;
+        if (wagonLeft < barX - 8)
+            wagonLeft = barX - 8;
+        const qreal bottom = barY + 4;
+        p.drawPixmap(QRectF(wagonLeft, bottom - wagonHeight, wagonWidth, wagonHeight),
+                     m_wagon, m_wagon.rect());
+        if (!m_oxen.isNull()) {
+            const qreal oxenWidth = 108;
+            const qreal oxenHeight = oxenWidth * m_oxen.height() / m_oxen.width();
+            p.drawPixmap(QRectF(wagonLeft + wagonWidth + 6, bottom - oxenHeight,
+                                oxenWidth, oxenHeight), m_oxen, m_oxen.rect());
+        }
+        labelBaseline = barY + 4 - wagonHeight - 16;
+    } else {
+
+        // Improved wagon (fallback when the sprite is unavailable)
+        int wagonX = barX + (barW * progress / 100.0) - 50;
+        int wagonY = barY - 48;
+
+        // Body
+        p.setPen(Qt::NoPen);
+        p.setBrush(QColor(140, 80, 40));
+        p.drawRoundedRect(wagonX, wagonY + 8, 90, 32, 4, 4);
+        // Cover
+        p.setBrush(QColor(90, 50, 25));
+        QPainterPath cover;
+        cover.moveTo(wagonX + 8, wagonY + 10);
+        cover.quadTo(wagonX + 45, wagonY - 18, wagonX + 82, wagonY + 10);
+        cover.lineTo(wagonX + 78, wagonY + 14);
+        cover.quadTo(wagonX + 45, wagonY - 10, wagonX + 12, wagonY + 14);
+        p.drawPath(cover);
+        // Wheels
+        p.setBrush(QColor(40, 25, 15));
+        p.drawEllipse(wagonX + 8, wagonY + 32, 18, 18);
+        p.drawEllipse(wagonX + 64, wagonY + 32, 18, 18);
+        p.setBrush(QColor(80, 50, 30));
+        p.drawEllipse(wagonX + 11, wagonY + 35, 12, 12);
+        p.drawEllipse(wagonX + 67, wagonY + 35, 12, 12);
+        // Spokes hint
+        p.setPen(QPen(QColor(60, 35, 20), 1));
+        p.drawLine(wagonX + 17, wagonY + 34, wagonX + 17, wagonY + 48);
+        p.drawLine(wagonX + 73, wagonY + 34, wagonX + 73, wagonY + 48);
+    }
+
+    // Draw the label last, above the sprite rig.
     p.setPen(Qt::white);
     p.setFont(QFont("Arial", 14, QFont::Bold));
-    p.drawText(barX, barY - 12, QString("Independence  →  Oregon City    %1 / 2040 miles   |   %2")
-               .arg(m_state->miles()).arg(m_state->weatherName()));
-
-    // Improved wagon
-    int wagonX = barX + (barW * progress / 100.0) - 50;
-    int wagonY = barY - 48;
-
-    // Body
-    p.setPen(Qt::NoPen);
-    p.setBrush(QColor(140, 80, 40));
-    p.drawRoundedRect(wagonX, wagonY + 8, 90, 32, 4, 4);
-    // Cover
-    p.setBrush(QColor(90, 50, 25));
-    QPainterPath cover;
-    cover.moveTo(wagonX + 8, wagonY + 10);
-    cover.quadTo(wagonX + 45, wagonY - 18, wagonX + 82, wagonY + 10);
-    cover.lineTo(wagonX + 78, wagonY + 14);
-    cover.quadTo(wagonX + 45, wagonY - 10, wagonX + 12, wagonY + 14);
-    p.drawPath(cover);
-    // Wheels
-    p.setBrush(QColor(40, 25, 15));
-    p.drawEllipse(wagonX + 8, wagonY + 32, 18, 18);
-    p.drawEllipse(wagonX + 64, wagonY + 32, 18, 18);
-    p.setBrush(QColor(80, 50, 30));
-    p.drawEllipse(wagonX + 11, wagonY + 35, 12, 12);
-    p.drawEllipse(wagonX + 67, wagonY + 35, 12, 12);
-    // Spokes hint
-    p.setPen(QPen(QColor(60, 35, 20), 1));
-    p.drawLine(wagonX + 17, wagonY + 34, wagonX + 17, wagonY + 48);
-    p.drawLine(wagonX + 73, wagonY + 34, wagonX + 73, wagonY + 48);
+    p.drawText(QPointF(barX, qMax(qreal(20), labelBaseline)),
+               QString("Independence  →  Oregon City    %1 / 2040 miles   |   %2")
+                   .arg(m_state->miles()).arg(m_state->weatherName()));
 }

@@ -35,5 +35,15 @@ Run fullscreen or at 2560×720 on the Xeneon Edge.
 Place `.wav` files in a `sounds/` folder next to the binary:
 - `travel.wav`, `hunt.wav`, `event.wav`, `win.wav`, `lose.wav`, `shot.wav`, `river.wav`
 
+## Sprites
+
+Trail and hunting sprites are compiled into the binary from `resources/sprites/` through `resources.qrc`. To replace one, put a PNG of the same filename in that folder and rebuild. Expected names:
+
+- `wagon.png`, `oxen.png`, `deer.png`, `buffalo.png`, `rabbit.png`, `tree.png` — transparent background
+- `hills.png` — horizontally tileable hill strip, sky transparent
+- `ground.png`, `ground_snow.png` — tileable ground textures
+
+If a pixmap fails to load, that element falls back to the original drawing. Sky stays a gradient. There are no sky image files.
+
 ## License
 MIT. Gameplay inspired by the original Oregon Trail whose source was published in *Creative Computing* (1978).

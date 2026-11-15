@@ -10,6 +10,7 @@ set(CMAKE_AUTOUIC ON)
 find_package(Qt6 REQUIRED COMPONENTS Widgets Multimedia)
 
 add_executable(oregon-trail-xeneon
+    resources.qrc
     src/main.cpp
     src/MainWindow.cpp
     src/MainWindow.h
